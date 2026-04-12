@@ -27,8 +27,9 @@ public class OpenWeatherMapFeeder implements WeatherFeeder {
                 JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
 
                 // 4. Extraer solo los datos que nos interesan
-                double temp = jsonObject.getAsJsonObject("main").get("temp").getAsDouble();
-                int humidity = jsonObject.getAsJsonObject("main").get("humidity").getAsInt();
+                JsonObject main = jsonObject.getAsJsonObject("main");
+                double temp = main.get("temp").getAsDouble();
+                int humidity =  main.get("humidity").getAsInt();
                 String timestamp = Instant.now().toString(); // Formato ISO 8601 (ej. 2024-03-20T15:30:00Z)
 
                 // 5. Devolver nuestro modelo limpio
