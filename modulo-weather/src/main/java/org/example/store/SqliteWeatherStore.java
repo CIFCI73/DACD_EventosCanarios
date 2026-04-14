@@ -15,7 +15,6 @@ public class SqliteWeatherStore implements WeatherStore {
     }
 
     private void initDatabase() {
-        // 1. Definiamo il comando SQL per creare la tabella
         String sql = "CREATE TABLE IF NOT EXISTS weather_data (" +
                 "location TEXT," +
                 "temp REAL," +
@@ -24,7 +23,6 @@ public class SqliteWeatherStore implements WeatherStore {
                 "captured_at TEXT" +
                 ");";
 
-        // 2. Apriamo la connessione e inviamo il comando
         try (Connection conn = DriverManager.getConnection(dbPath);
              Statement stmt = conn.createStatement()) {
 
