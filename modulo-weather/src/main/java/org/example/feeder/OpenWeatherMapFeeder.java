@@ -9,7 +9,7 @@ import com.google.gson.JsonParser;
 import java.time.Instant;
 
 public class OpenWeatherMapFeeder implements WeatherFeeder {
-    private final String apiKey = "TU_API_KEY_AQUI"; // Sustituye por tu clave de OpenWeatherMap
+    private final String apiKey = "cbe75b0dbf0b1672f5717afb30edd422"; // Sustituye por tu clave de OpenWeatherMap
     private final OkHttpClient client = new OkHttpClient();
 
     @Override

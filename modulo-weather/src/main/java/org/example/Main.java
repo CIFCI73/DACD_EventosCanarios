@@ -1,17 +1,27 @@
 package org.example;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main {
-    public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+// Importamos las clases que hemos creado en las otras carpetas
+import org.example.control.WeatherControl;
+import org.example.feeder.OpenWeatherMapFeeder;
+import org.example.store.SqliteWeatherStore;
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
-        }
+public class Main {
+
+    // Este es el método que Java busca para iniciar cualquier programa
+    public static void main(String[] args) {
+
+        // 1. Definimos dónde se va a guardar el archivo de la base de datos
+        String dbPath = "jdbc:sqlite:weather.db";
+
+        // 2. Creamos a los "trabajadores" (usamos las clases reales, no las interfaces)
+        OpenWeatherMapFeeder feeder = new OpenWeatherMapFeeder();
+        SqliteWeatherStore store = new SqliteWeatherStore(dbPath);
+
+        // 3. Contratamos al "jefe" (el control) y le entregamos sus herramientas
+        WeatherControl control = new WeatherControl(feeder, store);
+
+        // 4. ¡Encendemos la máquina!
+        System.out.println("Iniciando el módulo Weather...");
+        control.start();
     }
 }
