@@ -37,22 +37,19 @@ public class SqliteWeatherStore implements WeatherStore {
 
     @Override
     public void store(Weather weather) {
-        // 1. Prepariamo la "maschera" dell'inserimento.
-        // I '?' sono segnaposto (placeholders) per i dati reali.
+        // Preparamos la "plantilla" de inserción.
         String sql = "INSERT INTO weather_data (location, temp, humidity, rain_prob, captured_at) VALUES (?, ?, ?, ?, ?)";
 
-        // 2. Apriamo la connessione e prepariamo il "comando sicuro" (PreparedStatement)
+        // Abrimos la conexión y preparamos la "instrucción preparada" (PreparedStatement)
         try (Connection conn = DriverManager.getConnection(dbPath);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // 3. Assegniamo i valori del Record Weather ai punti interrogativi
-            pstmt.setString(1, weather.location());  // Primo ?: la città (String)
-            pstmt.setDouble(2, weather.temp());      // Secondo ?: temperatura (double)
-            pstmt.setInt(3, weather.humidity());     // Terzo ?: umidità (int)
-            pstmt.setDouble(4, weather.rainProb());  // Quarto ?: prob. pioggia (double)
-            pstmt.setString(5, weather.capturedAt());// Quinto ?: data e ora (String)
+            // Asignemos los valores del registro Weather a los signos de interrogación            pstmt.setString(1, weather.location());  // Primo ?: la città (String)
+            pstmt.setDouble(2, weather.temp());      // Segundo ?: temp (double)
+            pstmt.setInt(3, weather.humidity());     // Tercero ?: humedad (int)
+            pstmt.setDouble(4, weather.rainProb());  // cuarto ?: posibilidad de lluvia (double)
+            pstmt.setString(5, weather.capturedAt());// Quinto ?: fecha y hora (String)
 
-            // 4. Eseguiamo l'operazione di scrittura
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
