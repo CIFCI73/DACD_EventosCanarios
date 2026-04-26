@@ -11,6 +11,7 @@
     <modules>
         <module>modulo-weather</module>
         <module>modulo-news</module>
+        <module>modulo-eventstore</module>
     </modules>
 
     <properties>
