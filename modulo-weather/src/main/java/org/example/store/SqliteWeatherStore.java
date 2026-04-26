@@ -48,7 +48,7 @@ public class SqliteWeatherStore implements WeatherStore {
             pstmt.setDouble(2, weather.temp());      // Segundo ?: temp (double)
             pstmt.setInt(3, weather.humidity());     // Tercero ?: humedad (int)
             pstmt.setDouble(4, weather.rainProb());  // cuarto ?: posibilidad de lluvia (double)
-            pstmt.setString(5, weather.capturedAt());// Quinto ?: fecha y hora (String)
+            pstmt.setString(5, weather.ts());// Quinto ?: fecha y hora (String)
 
             pstmt.executeUpdate();
 

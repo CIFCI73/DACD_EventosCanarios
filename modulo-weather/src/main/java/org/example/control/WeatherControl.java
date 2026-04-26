@@ -21,15 +21,14 @@ public class WeatherControl {
     public void execute() {
         Weather weather = feeder.getWeather("Las Palmas de Gran Canaria");
 
-
-        // Si el feeder nos ha dado datos, los guardamos en la base de datos
+        // Si el feeder nos ha dado datos, los guardamos en la base de datos (ahora en ActiveMQ)
         if (weather != null) {
             store.store(weather);
             System.out.println("Datos guardados: " + weather.location() +
                     " | Temp: " + weather.temp() + "°C" +
                     " | Humedad: " + weather.humidity() + "%" +
                     " | Lluvia: " + weather.rainProb() +
-                    " | Fecha: " + weather.capturedAt());
+                    " | Fecha: " + weather.ts()); // ATTENZIONE: cambiato capturedAt() in ts() per lo Sprint 2
         } else {
             System.out.println("No se pudieron obtener los datos. Revisa tu API key o la conexión.");
         }

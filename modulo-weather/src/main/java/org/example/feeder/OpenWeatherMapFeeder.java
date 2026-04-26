@@ -9,7 +9,7 @@ import com.google.gson.JsonParser;
 import java.time.Instant;
 
 public class OpenWeatherMapFeeder implements WeatherFeeder {
-    private final String apiKey = "cbe75b0dbf0b1672f5717afb30edd422"; // Sustituye por tu clave de OpenWeatherMap
+    private final String apiKey = "cbe75b0dbf0b1672f5717afb30edd422"; // clave de OpenWeatherMap
     private final OkHttpClient client = new OkHttpClient();
 
     @Override
@@ -30,9 +30,10 @@ public class OpenWeatherMapFeeder implements WeatherFeeder {
                 JsonObject main = jsonObject.getAsJsonObject("main");
                 double temp = main.get("temp").getAsDouble();
                 int humidity =  main.get("humidity").getAsInt();
-                String timestamp = Instant.now().toString(); //Formato ISO-8601
+                String ts = Instant.now().toString(); //Formato ISO-8601
+                String ss = "weather-feeder"; // Identificador de la fuente
 
-                return new Weather(location, temp, humidity, 0.0, timestamp);
+                return new Weather(ts, ss, location, temp, humidity, 0.0);
             }
         } catch (Exception e) {
             System.err.println("Error al conectar con OpenWeatherMap: " + e.getMessage());
