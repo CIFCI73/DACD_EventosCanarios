@@ -12,7 +12,6 @@ import java.util.List;
 
 public class AgendaScraperFeeder implements EventFeeder {
 
-    // Aquí está tu URL real filtrada por Gran Canaria
     private final String url = "https://www.icdcultural.org/agenda-cultural/eventos?isla=Gran+Canaria";
 
     @Override
@@ -23,10 +22,9 @@ public class AgendaScraperFeeder implements EventFeeder {
             System.out.println("Conectando a la agenda del ICDC...");
             Document doc = Jsoup.connect(url)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-                    .timeout(10000) // Le damos 10 segundos por si la web va lenta
+                    .timeout(10000)
                     .get();
 
-            // 1. EL CONTENEDOR PRINCIPAL: Aquí debes poner la clase HTML que envuelve cada evento
             Elements eventosHtml = doc.select("div.descripcion-div");
 
             for (Element el : eventosHtml) {
