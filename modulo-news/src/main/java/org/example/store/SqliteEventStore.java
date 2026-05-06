@@ -41,7 +41,7 @@ public class SqliteEventStore implements EventStore {
                 pstmt.setString(1, event.title());
                 pstmt.setString(2, event.date());
                 pstmt.setString(3, event.location());
-                pstmt.setString(4, event.capturedAt());
+                pstmt.setString(4, event.ts());
                 pstmt.executeUpdate();
             }
             System.out.println("Guardados " + events.size() + " eventos en la base de datos.");

@@ -28,14 +28,18 @@ public class AgendaScraperFeeder implements EventFeeder {
             Elements eventosHtml = doc.select("div.descripcion-div");
 
             for (Element el : eventosHtml) {
-                // 2. LOS DATOS INTERNOS: Aquí pondremos las clases del título, fecha y lugar
+                // LOS DATOS INTERNOS
                 String title = el.select("h3.titulo-espectaculo").text();
                 String date = el.select("div.text-block-107").text();
                 String location = el.select("div.text-block-42").text();
-                String capturedAt = Instant.now().toString();
+
+                // Nuevos campos obligatorios para el Sprint 2:
+                String ts = Instant.now().toString(); // ts: timestamp (reemplaza a capturedAt)
+                String ss = "news-feeder";            // ss: source system
 
                 if (!title.isEmpty()) {
-                    eventList.add(new Event(title, date, location, capturedAt));
+                    // ¡Atención al nuevo orden! (ts, ss, title, date, location)
+                    eventList.add(new Event(ts, ss, title, date, location));
                 }
             }
 

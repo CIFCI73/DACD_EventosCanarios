@@ -35,4 +35,30 @@ de tocar el controlador ni la base de datos.
 2. Pega esa clave en la variable `apiKey` dentro del archivo `OpenWeatherMapFeeder.java`.
 3. Ejecuta la clase `Main.java`. El programa creará la base de datos automáticamente y verás en la consola cómo se van guardando los datos.
 
----
+### Módulo News
+
+
+
+## SPRINT 2
+
+En este segundo sprint del proyecto, hemos cambiado por completo la forma en la que se comunican nuestros módulos. Hemos dejado atrás el guardado directo en bases de datos SQLite y hemos implementado una arquitectura basada en eventos (**Publisher/Subscriber**) utilizando **Apache ActiveMQ**.
+
+### 1. La nueva arquitectura y los Publishers
+Nuestros módulos originales (`modulo-weather` y `modulo-news`[cite: 5]) ahora funcionan como "estaciones de radio" (Publishers). En lugar de guardar los datos, los empaquetan y los publican en canales específicos (Topics) del broker de ActiveMQ.
+
+### 2. El Suscriptor (EventBuilderSubscriber)
+Para capturar estos eventos, hemos creado un módulo completamente nuevo llamado `modulo-eventstore`[cite: 5].
+
+Mi principal aportación en este módulo ha sido desarrollar la clase `EventBuilderSubscriber`[cite: 5]. Sus características principales son:
+* **Conexión al Broker:** Se conecta a ActiveMQ (en `tcp://localhost:61616`) y actúa como el "escuchador" central.
+* **Suscripción Duradera:** Se suscribe de forma *duradera* a los topics `Weather` y `Events`. Esto es vital porque si el `Event Store` se apaga temporalmente, al volver a encenderse recuperará automáticamente todos los mensajes que los Feeders publicaron mientras estaba desconectado.
+* **Delegación:** Cada vez que recibe un mensaje JSON, se lo pasa a la clase encargada de archivarlo.
+
+### 3. Instrucciones de ejecución
+Para probar toda la arquitectura del Sprint 2 al mismo tiempo, sigue este orden:
+1. Abre una terminal y arranca el broker de **ActiveMQ** (`activemq start`).
+2. En tu IDE, ejecuta primero la clase `Main` del `modulo-eventstore`[cite: 5] (para que empiece a escuchar).
+3. A continuación, ejecuta la clase `Main` del `modulo-weather`[cite: 5] y la del `modulo-news`[cite: 5].
+4. Verás en las diferentes consolas cómo los Feeders envían eventos y el EventStore los recibe en tiempo real.
+
+
