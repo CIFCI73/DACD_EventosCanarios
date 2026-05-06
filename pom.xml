@@ -9,9 +9,9 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>modulo-weather</module>
-        <module>modulo-news</module>
-        <module>modulo-eventstore</module>
+        <module>weather</module>
+        <module>news</module>
+        <module>eventstore-builder</module>
     </modules>
 
     <properties>
