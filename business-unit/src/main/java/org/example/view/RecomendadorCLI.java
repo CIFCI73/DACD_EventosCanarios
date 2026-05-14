@@ -49,26 +49,41 @@ public class RecomendadorCLI {
             return;
         }
 
-        // 2. Mostramos el clima y damos el CONSEJO (La "lógica de negocio")
+        // 2. Mostramos el clima y damos el CONSEJO (La verdadera "Lógica de Negocio")
         if (weather != null) {
-            System.out.println("🌤️ Clima: " + weather.temp() + "°C, Humedad: " + weather.humidity() + "%");
-            if (weather.rainProb() > 0.3) {
-                System.out.println("💡 RECOMENDACIÓN: ¡Hay riesgo de lluvia (" + (weather.rainProb() * 100) + "%)! Mejor llévate un paraguas ☔");
+            System.out.println("🌤️ Clima: " + weather.temp() + "°C, Humedad: " + weather.humidity() + "%, Prob. Lluvia: " + (weather.rainProb() * 100) + "%");
+
+            System.out.print("💡 RECOMENDACIÓN: ");
+            if (weather.rainProb() > 0.4) {
+                System.out.println("Alta probabilidad de lluvia. ¡No olvides el paraguas y prioriza eventos a cubierto! ☔");
+            } else if (weather.temp() > 28.0) {
+                System.out.println("Hace bastante calor. Llévate agua, ponte crema solar y busca la sombra. 🥵");
+            } else if (weather.temp() < 16.0) {
+                System.out.println("Temperaturas inusualmente bajas para Canarias. ¡Coge una chaqueta antes de salir! 🧥");
             } else {
-                System.out.println("💡 RECOMENDACIÓN: Día estupendo para estar al aire libre ☀️");
+                System.out.println("Condiciones meteorológicas excelentes. ¡Día ideal para disfrutar de la oferta cultural! ☀️");
             }
         } else {
-            System.out.println("🌤️ Clima: Aún no tenemos la predicción para este día.");
+            System.out.println("🌤️ Clima: Aún no tenemos la predicción meteorológica para este día.");
         }
 
-        // 3. Mostramos la lista de eventos
-        System.out.println("\n🎭 Eventos culturales encontrados (" + events.size() + "):");
+        // 3. Filtramos y mostramos SOLO los eventos de Gran Canaria
+        System.out.println("\n🎭 Eventos culturales en Gran Canaria:");
+
         if (events.isEmpty()) {
-            System.out.println("No hay eventos programados en nuestra agenda.");
+            System.out.println("No hay eventos programados en nuestra agenda global.");
         } else {
-            for (int i = 0; i < events.size(); i++) {
-                Event e = events.get(i);
-                System.out.println("  " + (i + 1) + ". " + e.title() + " (Lugar: " + e.location() + ")");
+            int count = 1;
+            for (Event e : events) {
+                // Filtro geográfico: solo pasa si la ubicación contiene "Gran Canaria" o "Las Palmas"
+                if (e.location().contains("Gran Canaria") || e.location().contains("Las Palmas")) {
+                    System.out.println("  " + count + ". " + e.title() + " (Lugar: " + e.location() + ")");
+                    count++;
+                }
+            }
+            // Si después de filtrar el contador sigue en 1, significa que no había nada en esa isla
+            if (count == 1) {
+                System.out.println("  No hay eventos específicos en Gran Canaria para esta fecha.");
             }
         }
         System.out.println("----------------------------------------");

@@ -18,15 +18,46 @@ public class InMemoryDatamart implements DatamartUpdater {
         try {
             if (topic.equals("Weather")) {
                 Weather w = gson.fromJson(jsonEvent, Weather.class);
-                // Extraemos la fecha YYYY-MM-DD del timestamp "ts"
-                String date = w.ts().substring(0, 10);
-                weatherByDate.put(date, w);
+                // Il meteo è già in formato YYYY-MM-DD, quindi tagliamo solo i primi 10 caratteri
+                String dateKey = w.ts().substring(0, 10);
+                weatherByDate.put(dateKey, w);
+
             } else if (topic.equals("Events")) {
                 Event e = gson.fromJson(jsonEvent, Event.class);
-                // Usamos el campo "ts" del evento para organizarlo por fecha
-                String date = e.ts().substring(0, 10);
-                // Añadimos el evento a la lista de esa fecha. Si no existe la lista, la crea automáticamente.
-                eventsByDate.computeIfAbsent(date, k -> new ArrayList<>()).add(e);
+
+                // NORMALIZZAZIONE: Trasformiamo la data dell'evento (es. "14/5/2026 19:00")
+                // nello standard YYYY-MM-DD per farla combaciare con il meteo.
+                String rawDate = e.date();
+                String eventDateKey;
+
+                try {
+                    // Dividiamo la stringa usando lo spazio per togliere l'ora: resta "14/5/2026"
+                    String datePart = rawDate.split(" ")[0];
+                    // Dividiamo la data usando la barra "/"
+                    String[] parts = datePart.split("/");
+
+                    int day = Integer.parseInt(parts[0]);
+                    int month = Integer.parseInt(parts[1]);
+                    int year = Integer.parseInt(parts[2]);
+
+                    // Ricostruiamo la data imponendo il formato YYYY-MM-DD (es. 2026-05-14)
+                    eventDateKey = String.format("%04d-%02d-%02d", year, month, day);
+
+                } catch (Exception ex) {
+                    // Se la data è illeggibile, usiamo il timestamp come piano di riserva
+                    eventDateKey = e.ts().substring(0, 10);
+                }
+
+                // Cerchiamo (o creiamo) la lista di eventi per questa data normalizzata
+                List<Event> dailyEvents = eventsByDate.computeIfAbsent(eventDateKey, k -> new ArrayList<>());
+
+                // Controllo anti-duplicati: controlliamo se l'evento è già in lista
+                boolean duplicato = dailyEvents.stream()
+                        .anyMatch(eventoEsistente -> eventoEsistente.title().equals(e.title()));
+
+                if (!duplicato) {
+                    dailyEvents.add(e);
+                }
             }
         } catch (Exception e) {
             System.err.println("❌ Error procesando el JSON en el Datamart: " + e.getMessage());
