@@ -1,4 +1,4 @@
-package org.example.control;
+package org.example;
 
 import org.example.model.Weather;
 import org.example.model.Event;
