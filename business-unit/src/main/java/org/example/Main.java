@@ -1,6 +1,5 @@
 package org.example;
 
-import org.example.control.InMemoryDatamart;
 import org.example.reader.EventStoreReader;
 import org.example.subscriber.ActiveMQListener;
 import org.example.view.RecomendadorCLI;

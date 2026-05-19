@@ -1,6 +1,5 @@
 package org.example;
 
-import org.example.control.WeatherControl;
 import org.example.feeder.OpenWeatherMapFeeder;
 import org.example.store.ActiveMQWeatherStore;
 import org.example.store.WeatherStore;

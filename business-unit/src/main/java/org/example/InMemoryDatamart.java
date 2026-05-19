@@ -1,4 +1,4 @@
-package org.example.control;
+package org.example;
 
 import com.google.gson.Gson;
 import org.example.datamart.DatamartUpdater;

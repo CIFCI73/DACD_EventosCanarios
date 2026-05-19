@@ -1,6 +1,5 @@
 package org.example;
 
-import org.example.control.Controller;
 import org.example.feeder.AgendaScraperFeeder;
 import org.example.feeder.EventFeeder;
 import org.example.store.ActiveMQEventStore;

@@ -1,6 +1,6 @@
 package org.example.view;
 
-import org.example.control.InMemoryDatamart;
+import org.example.InMemoryDatamart;
 import org.example.model.Event;
 import org.example.model.Weather;
 
