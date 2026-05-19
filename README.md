@@ -62,3 +62,16 @@ Para probar toda la arquitectura del Sprint 2 al mismo tiempo, sigue este orden:
 4. Verás en las diferentes consolas cómo los Feeders envían eventos y el EventStore los recibe en tiempo real.
 
 
+## SPRINT 3
+
+En este tercer y último sprint, hemos desarrollado la **Business Unit** (`modulo-business-unit`), el núcleo lógico de nuestra aplicación que procesa y unifica toda la información recopilada.
+
+Para este módulo, hemos implementado una arquitectura de procesamiento dual (similar a una arquitectura Lambda/Kappa):
+1. **Carga Histórica (Batch):** Al arrancar, el sistema utiliza la clase `EventStoreReader` para procesar de forma masiva todos los archivos `.events` almacenados en el disco por el EventStore.
+2. **Tiempo Real (Streaming):** Simultáneamente, la clase `ActiveMQListener` se suscribe a los topics del broker, inyectando los eventos nuevos al instante.
+
+**El Datamart en Memoria**
+Toda esta información converge en la clase `InMemoryDatamart`. Hemos diseñado este componente para que actúe como una base de datos en memoria, normalizando las fechas y evitando eventos duplicados, lo que optimiza enormemente el rendimiento de las consultas.
+
+**La Interfaz de Usuario (CLI)**
+Finalmente, hemos creado `RecomendadorCLI`, una interfaz interactiva por consola. Esta vista solicita al usuario una fecha específica, consulta el Datamart y aplica nuestra Lógica de Negocio: cruza los datos meteorológicos con la agenda de eventos para emitir recomendaciones personalizadas (por ejemplo, advertir sobre llevar paraguas si la probabilidad de lluvia es alta y priorizar eventos a cubierto).
