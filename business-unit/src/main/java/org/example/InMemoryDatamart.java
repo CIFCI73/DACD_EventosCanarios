@@ -5,6 +5,7 @@ import org.example.datamart.DatamartUpdater;
 import org.example.model.Event;
 import org.example.model.Weather;
 
+import java.time.LocalDate;
 import java.util.*;
 
 public class InMemoryDatamart implements DatamartUpdater {
@@ -18,45 +19,35 @@ public class InMemoryDatamart implements DatamartUpdater {
         try {
             if (topic.equals("Weather")) {
                 Weather w = gson.fromJson(jsonEvent, Weather.class);
-                // Il meteo è già in formato YYYY-MM-DD, quindi tagliamo solo i primi 10 caratteri
                 String dateKey = w.ts().substring(0, 10);
                 weatherByDate.put(dateKey, w);
 
             } else if (topic.equals("Events")) {
                 Event e = gson.fromJson(jsonEvent, Event.class);
-
-                // NORMALIZZAZIONE: Trasformiamo la data dell'evento (es. "14/5/2026 19:00")
-                // nello standard YYYY-MM-DD per farla combaciare con il meteo.
-                String rawDate = e.date();
-                String eventDateKey;
+                String rawDate = e.date().trim(); // Ej: "19/05/2026 - 24/05/2026" o "14/5/2026 19:00"
 
                 try {
-                    // Dividiamo la stringa usando lo spazio per togliere l'ora: resta "14/5/2026"
-                    String datePart = rawDate.split(" ")[0];
-                    // Dividiamo la data usando la barra "/"
-                    String[] parts = datePart.split("/");
+                    if (rawDate.contains("-")) {
+                        // 1. ES UN RANGO DE FECHAS
+                        String[] dates = rawDate.split("-");
+                        LocalDate startDate = parseToLocalDate(dates[0].trim());
+                        LocalDate endDate = parseToLocalDate(dates[1].trim());
 
-                    int day = Integer.parseInt(parts[0]);
-                    int month = Integer.parseInt(parts[1]);
-                    int year = Integer.parseInt(parts[2]);
-
-                    // Ricostruiamo la data imponendo il formato YYYY-MM-DD (es. 2026-05-14)
-                    eventDateKey = String.format("%04d-%02d-%02d", year, month, day);
-
+                        // Bucle mágico: añade el evento a TODOS los días desde el inicio hasta el final
+                        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                            // date.toString() devuelve automáticamente el formato "YYYY-MM-DD"
+                            addEventToMap(date.toString(), e);
+                        }
+                    } else {
+                        // 2. ES UNA FECHA ÚNICA (la lógica antigua)
+                        String datePart = rawDate.split(" ")[0]; // Quitamos la hora si la tiene
+                        LocalDate date = parseToLocalDate(datePart);
+                        addEventToMap(date.toString(), e);
+                    }
                 } catch (Exception ex) {
-                    // Se la data è illeggibile, usiamo il timestamp come piano di riserva
-                    eventDateKey = e.ts().substring(0, 10);
-                }
-
-                // Cerchiamo (o creiamo) la lista di eventi per questa data normalizzata
-                List<Event> dailyEvents = eventsByDate.computeIfAbsent(eventDateKey, k -> new ArrayList<>());
-
-                // Controllo anti-duplicati: controlliamo se l'evento è già in lista
-                boolean duplicato = dailyEvents.stream()
-                        .anyMatch(eventoEsistente -> eventoEsistente.title().equals(e.title()));
-
-                if (!duplicato) {
-                    dailyEvents.add(e);
+                    // Plan de respaldo si la fecha es texto irreconocible
+                    String fallbackDate = e.ts().substring(0, 10);
+                    addEventToMap(fallbackDate, e);
                 }
             }
         } catch (Exception e) {
@@ -64,12 +55,34 @@ public class InMemoryDatamart implements DatamartUpdater {
         }
     }
 
-    // Método para la interfaz de usuario (View): devuelve el clima de una fecha específica
+    // --- MÉTODOS AUXILIARES PARA TENER UN CÓDIGO MÁS LIMPIO ---
+
+    // Transforma un String "DD/MM/YYYY" a un objeto LocalDate
+    private LocalDate parseToLocalDate(String dateStr) {
+        String[] parts = dateStr.split("/");
+        int day = Integer.parseInt(parts[0]);
+        int month = Integer.parseInt(parts[1]);
+        int year = Integer.parseInt(parts[2]);
+        return LocalDate.of(year, month, day);
+    }
+
+    // Guarda el evento en el mapa asegurándose de que no haya duplicados
+    private void addEventToMap(String dateKey, Event e) {
+        List<Event> dailyEvents = eventsByDate.computeIfAbsent(dateKey, k -> new ArrayList<>());
+
+        boolean duplicato = dailyEvents.stream()
+                .anyMatch(eventoEsistente -> eventoEsistente.title().equals(e.title()));
+
+        if (!duplicato) {
+            dailyEvents.add(e);
+        }
+    }
+
+    // Métodos para la interfaz de usuario (View)
     public Weather getWeatherFor(String date) {
         return weatherByDate.get(date);
     }
 
-    // Método para la interfaz de usuario (View): devuelve la lista de eventos de una fecha específica
     public List<Event> getEventsFor(String date) {
         return eventsByDate.getOrDefault(date, Collections.emptyList());
     }
