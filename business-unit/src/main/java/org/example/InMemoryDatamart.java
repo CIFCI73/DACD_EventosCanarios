@@ -7,12 +7,16 @@ import org.example.model.Weather;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class InMemoryDatamart implements DatamartUpdater {
-    // Usamos mapas para guardar los datos usando la FECHA (ej. 2026-04-26) como clave
     private final Map<String, Weather> weatherByDate = new HashMap<>();
     private final Map<String, List<Event>> eventsByDate = new HashMap<>();
     private final Gson gson = new Gson();
+
+    // Patrón Regex: Busca de 1 a 2 números, una barra, 1 a 2 números, una barra, y 4 números (Ej: 14/5/2026 o 29/05/2026)
+    private final Pattern datePattern = Pattern.compile("\\d{1,2}/\\d{1,2}/\\d{4}");
 
     @Override
     public void processEvent(String topic, String jsonEvent) {
@@ -24,25 +28,32 @@ public class InMemoryDatamart implements DatamartUpdater {
 
             } else if (topic.equals("Events")) {
                 Event e = gson.fromJson(jsonEvent, Event.class);
-                String rawDate = e.date().trim(); // Ej: "19/05/2026 - 24/05/2026" o "14/5/2026 19:00"
+                String rawDate = e.date();
 
                 try {
-                    if (rawDate.contains("-")) {
-                        // 1. ES UN RANGO DE FECHAS
-                        String[] dates = rawDate.split("-");
-                        LocalDate startDate = parseToLocalDate(dates[0].trim());
-                        LocalDate endDate = parseToLocalDate(dates[1].trim());
+                    // "Pescamos" todas las fechas que haya dentro del texto
+                    Matcher matcher = datePattern.matcher(rawDate);
+                    List<String> extractedDates = new ArrayList<>();
 
-                        // Bucle mágico: añade el evento a TODOS los días desde el inicio hasta el final
+                    while (matcher.find()) {
+                        extractedDates.add(matcher.group());
+                    }
+
+                    if (extractedDates.size() == 2) {
+                        // 1. ES UN RANGO DE FECHAS (Encontró dos fechas separadas)
+                        LocalDate startDate = parseToLocalDate(extractedDates.get(0));
+                        LocalDate endDate = parseToLocalDate(extractedDates.get(1));
+
                         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-                            // date.toString() devuelve automáticamente el formato "YYYY-MM-DD"
                             addEventToMap(date.toString(), e);
                         }
-                    } else {
-                        // 2. ES UNA FECHA ÚNICA (la lógica antigua)
-                        String datePart = rawDate.split(" ")[0]; // Quitamos la hora si la tiene
-                        LocalDate date = parseToLocalDate(datePart);
+                    } else if (extractedDates.size() == 1) {
+                        // 2. ES UNA FECHA ÚNICA (Ignora las horas y los paréntesis automáticamente)
+                        LocalDate date = parseToLocalDate(extractedDates.get(0));
                         addEventToMap(date.toString(), e);
+                    } else {
+                        // 3. NO ENCONTRÓ FECHAS VÁLIDAS
+                        throw new Exception("No se encontraron fechas en el formato DD/MM/YYYY");
                     }
                 } catch (Exception ex) {
                     // Plan de respaldo si la fecha es texto irreconocible
@@ -55,9 +66,8 @@ public class InMemoryDatamart implements DatamartUpdater {
         }
     }
 
-    // --- MÉTODOS AUXILIARES PARA TENER UN CÓDIGO MÁS LIMPIO ---
+    // --- MÉTODOS AUXILIARES ---
 
-    // Transforma un String "DD/MM/YYYY" a un objeto LocalDate
     private LocalDate parseToLocalDate(String dateStr) {
         String[] parts = dateStr.split("/");
         int day = Integer.parseInt(parts[0]);
@@ -66,7 +76,6 @@ public class InMemoryDatamart implements DatamartUpdater {
         return LocalDate.of(year, month, day);
     }
 
-    // Guarda el evento en el mapa asegurándose de que no haya duplicados
     private void addEventToMap(String dateKey, Event e) {
         List<Event> dailyEvents = eventsByDate.computeIfAbsent(dateKey, k -> new ArrayList<>());
 
@@ -78,7 +87,7 @@ public class InMemoryDatamart implements DatamartUpdater {
         }
     }
 
-    // Métodos para la interfaz de usuario (View)
+    // Métodos para la View
     public Weather getWeatherFor(String date) {
         return weatherByDate.get(date);
     }
