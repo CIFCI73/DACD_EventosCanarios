@@ -4,12 +4,12 @@ import org.example.feeder.WeatherFeeder;
 import org.example.model.Weather;
 import org.example.store.WeatherStore;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class WeatherControl {
-
     private final WeatherFeeder feeder;
     private final WeatherStore store;
 
@@ -19,23 +19,29 @@ public class WeatherControl {
     }
 
     public void execute() {
-        // Ahora recibimos una lista de días futuros
-        List<Weather> weatherForecasts = feeder.getWeather("Las Palmas de Gran Canaria");
+        // 1. Definimos las zonas climáticas clave de la isla
+        List<String> municipalities = Arrays.asList(
+                "Las Palmas de Gran Canaria", // Norte/Capital
+                "Maspalomas",                 // Sur
+                "Telde",                      // Este
+                "Agaete",                     // Noroeste
+                "Tejeda"                      // Cumbre/Centro
+        );
 
-        if (weatherForecasts != null && !weatherForecasts.isEmpty()) {
-            System.out.println("Enviando el pronóstico de los próximos días a ActiveMQ...");
+        System.out.println("Iniciando escaneo meteorológico insular...");
 
-            for (Weather weather : weatherForecasts) {
-                store.store(weather); // Lo publicamos en ActiveMQ
+        // 2. Pedimos el clima para CADA municipio
+        for (String city : municipalities) {
+            List<Weather> weatherForecasts = feeder.getWeather(city + ",ES"); // Añadimos ,ES para mayor precisión en la API
 
-                System.out.println("Datos guardados: " + weather.location() +
-                        " | Temp: " + weather.temp() + "°C" +
-                        " | Humedad: " + weather.humidity() + "%" +
-                        " | Lluvia: " + (weather.rainProb() * 100) + "%" +
-                        " | Fecha: " + weather.ts());
+            if (weatherForecasts != null && !weatherForecasts.isEmpty()) {
+                for (Weather weather : weatherForecasts) {
+                    store.store(weather); // Lo publicamos en ActiveMQ
+                }
+                System.out.println("✅ Predicción guardada para: " + city);
+            } else {
+                System.out.println("❌ No se pudieron obtener los datos para: " + city);
             }
-        } else {
-            System.out.println("No se pudieron obtener los datos. Revisa tu API key o la conexión.");
         }
     }
 
@@ -43,17 +49,10 @@ public class WeatherControl {
         Timer timer = new Timer();
         TimerTask task = new TimerTask() {
             @Override
-            public void run() {
-                execute();
-            }
+            public void run() { execute(); }
         };
 
-        // Si es una previsión de 5 días, no hace falta consultar cada minuto.
-        // Cada hora (3600000 ms) es más que suficiente para no agotar el límite gratis de la API.
-        long delay = 0;
-        long period = 3600000;
-
-        timer.schedule(task, delay, period);
+        timer.schedule(task, 0, 3600000); // Se ejecuta cada hora
         System.out.println("Temporizador iniciado. Consultando la previsión meteorológica cada hora...");
     }
 }

@@ -5,11 +5,13 @@ import org.example.model.Event;
 import org.example.model.Weather;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class RecomendadorCLI {
     private final InMemoryDatamart datamart;
 
+    // Cuando creamos la interfaz, le damos acceso al "almacén" de datos (el Datamart)
     public RecomendadorCLI(InMemoryDatamart datamart) {
         this.datamart = datamart;
     }
@@ -35,109 +37,135 @@ public class RecomendadorCLI {
     }
 
     private void mostrarRecomendacion(String date) {
-        Weather weather = datamart.getWeatherFor(date);
+        // Pedimos TODOS los climas de la isla para ese día
+        Map<String, Weather> islandWeather = datamart.getAllWeatherFor(date);
         List<Event> events = datamart.getEventsFor(date);
 
         System.out.println("\n--- 📅 Resultados para el " + date + " ---");
 
-        if (weather == null && events.isEmpty()) {
+        if (islandWeather.isEmpty() && events.isEmpty()) {
             System.out.println("Lo siento, no hay datos meteorológicos ni eventos para esta fecha.");
             return;
         }
 
-        // 1. Mostrar estado del clima general
-        if (weather != null) {
-            System.out.println("🌤️ CLIMA: " + weather.temp() + "°C | Humedad: " + weather.humidity() + "% | Prob. Lluvia: " + (weather.rainProb() * 100) + "%");
-        } else {
-            System.out.println("🌤️ CLIMA: Aún no tenemos la predicción meteorológica para este día.");
-        }
-
-        // 2. Mostrar la lista de eventos disponibles
-        System.out.println("\n🎭 AGENDA CULTURAL:");
+        System.out.println("\n🎭 AGENDA CULTURAL Y CONDICIONES LOCALES:");
         if (events.isEmpty()) {
             System.out.println("  No hay eventos programados para esta fecha.");
             return;
         } else {
             for (int i = 0; i < events.size(); i++) {
-                System.out.println("  " + (i + 1) + ". " + events.get(i).title() + " (" + events.get(i).location() + ")");
+                Event e = events.get(i);
+                // Buscamos el clima específico para la zona de ESTE evento
+                Weather localWeather = getWeatherForEvent(e, islandWeather);
+
+                System.out.println("  " + (i + 1) + ". " + e.title() + " (" + e.location() + ")");
+                if (localWeather != null) {
+                    System.out.println("     🌤️ Clima en la zona: " + localWeather.temp() + "°C | Humedad: " + localWeather.humidity() + "% | Prob. Lluvia: " + (localWeather.rainProb() * 100) + "%");
+                } else {
+                    System.out.println("     🌤️ Clima en la zona: No disponible");
+                }
             }
         }
 
-        // 3. LA PROPUESTA DE VALOR: El Motor de Recomendación Cruzada
-        if (weather != null && !events.isEmpty()) {
+        // LA PROPUESTA DE VALOR: El Motor de Recomendación Cruzada con Microclimas
+        if (!islandWeather.isEmpty() && !events.isEmpty()) {
             System.out.println("\n💡 RECOMENDACIÓN DEL SISTEMA PARA TI:");
-            generarConsejoInteligente(weather, events);
+            generarConsejoInteligente(islandWeather, events);
         }
         System.out.println("---------------------------------------------------------");
     }
 
-    private void generarConsejoInteligente(Weather weather, List<Event> events) {
-        boolean isRaining = weather.rainProb() > 0.4;  // Más de 40% de probabilidad
-        boolean isHot = weather.temp() > 25.0;         // Más de 25 grados
-        boolean isCold = weather.temp() < 18.0;        // Menos de 18 grados
-
+    private void generarConsejoInteligente(Map<String, Weather> islandWeather, List<Event> events) {
         Event bestEvent = null;
         String reason = "";
 
-        if (isRaining) {
-            // Si llueve, buscamos desesperadamente un evento a cubierto (Indoor)
-            bestEvent = findEventByType(events, true);
-            if (bestEvent != null) {
-                reason = "¡Pinta que va a llover! ☔ Te aconsejamos este evento a cubierto para que el clima no te arruine el plan.";
-            } else {
-                bestEvent = events.get(0);
-                reason = "Hay alta probabilidad de lluvia ☔. No tenemos eventos 100% a cubierto confirmados, ¡así que lleva un buen paraguas si vas a este!";
-            }
-        } else if (isHot) {
-            // Si hace mucho calor, recomendamos al aire libre para aprovechar el día (o playas/plazas)
-            bestEvent = findEventByType(events, false); // Buscamos Outdoor
-            if (bestEvent != null) {
-                reason = "Hace un día espectacular y caluroso ☀️. ¡Aprovecha el buen tiempo con este evento al aire libre! (No olvides el protector solar).";
-            } else {
-                // Si no hay aire libre, sugerimos indoor por el aire acondicionado
-                bestEvent = findEventByType(events, true);
-                if (bestEvent != null) reason = "Hace bastante calor 🥵. Una gran opción es refugiarte en este evento a cubierto (¡seguro que tienen aire acondicionado!).";
-            }
-        } else if (isCold) {
-            // Si hace frío, mejor a cubierto
-            bestEvent = findEventByType(events, true);
-            if (bestEvent != null) {
-                reason = "Hoy bajan un poco las temperaturas 🧥. Te recomendamos este plan en interior para estar más cómodo.";
+        // 1. Intentar buscar un plan de exterior si hace buen tiempo en su zona
+        for (Event e : events) {
+            Weather localW = getWeatherForEvent(e, islandWeather);
+            if (localW != null && isOutdoor(e.location())) {
+                if (localW.rainProb() < 0.3 && localW.temp() > 20.0 && localW.temp() < 28.0) {
+                    bestEvent = e;
+                    reason = "Hace un día espectacular en esta zona (" + localW.temp() + "°C) ☀️. ¡Aprovecha el buen tiempo con este evento al aire libre!";
+                    break;
+                }
             }
         }
 
-        // Si el clima es ideal (ni lluvia, ni mucho frío, ni mucho calor) o no encajó en los filtros
+        // 2. Si no hay buen tiempo exterior, buscar refugio interior donde el clima sea adverso
         if (bestEvent == null) {
-            bestEvent = events.get(0);
-            reason = "¡El clima de hoy es ideal en Canarias! 🌈 Cualquier plan es bueno, pero nosotros destacamos este para ti:";
+            for (Event e : events) {
+                Weather localW = getWeatherForEvent(e, islandWeather);
+                if (localW != null && isIndoor(e.location())) {
+                    if (localW.rainProb() >= 0.3) {
+                        bestEvent = e;
+                        reason = "Hay probabilidad de lluvia (" + (localW.rainProb() * 100) + "%) por esta zona ☔. Te aconsejamos este evento a cubierto para no mojarte.";
+                        break;
+                    } else if (localW.temp() >= 28.0) {
+                        bestEvent = e;
+                        reason = "Hace bastante calor (" + localW.temp() + "°C) por aquí 🥵. Refúgiate en este evento a cubierto (¡seguro que tienen aire acondicionado!).";
+                        break;
+                    } else if (localW.temp() <= 18.0) {
+                        bestEvent = e;
+                        reason = "Refresca un poco por aquí (" + localW.temp() + "°C) 🧥. Te recomendamos este plan en interior para estar más cómodo.";
+                        break;
+                    }
+                }
+            }
         }
 
-        // Imprimimos la recomendación final
-        System.out.println("   ⭐ EVENTO: " + bestEvent.title());
-        System.out.println("   📍 LUGAR: " + bestEvent.location());
-        System.out.println("   🗣️ POR QUÉ: " + reason);
+        // 3. Fallback: cualquier evento si el clima es neutro y no salta ninguna alerta
+        if (bestEvent == null && !events.isEmpty()) {
+            bestEvent = events.get(0);
+            reason = "Las condiciones son muy estables en toda la isla hoy. Cualquier plan es bueno, pero nosotros destacamos este para ti:";
+        }
+
+        if (bestEvent != null) {
+            System.out.println("   ⭐ EVENTO: " + bestEvent.title());
+            System.out.println("   📍 LUGAR: " + bestEvent.location());
+            System.out.println("   🗣️ POR QUÉ: " + reason);
+        }
     }
 
-    // --- ALGORITMO DE CLASIFICACIÓN DE LUGARES ---
-    private Event findEventByType(List<Event> events, boolean wantIndoor) {
-        // Palabras clave para detectar si un recinto es cerrado
-        String[] indoorKw = {"teatro", "auditorio", "centro", "sala", "museo", "pabellón", "espacio", "casa", "biblioteca", "edificio"};
-        // Palabras clave para detectar si es al aire libre
-        String[] outdoorKw = {"plaza", "parque", "playa", "calle", "avenida", "estadio", "anfiteatro", "muelle", "mirador"};
+    // --- ALGORITMOS DE EMPAREJAMIENTO Y CLASIFICACIÓN ---
 
-        for (Event e : events) {
-            String loc = e.location().toLowerCase();
-            boolean isIndoor = false;
-            boolean isOutdoor = false;
+    private Weather getWeatherForEvent(Event event, Map<String, Weather> islandWeather) {
+        if (islandWeather == null || islandWeather.isEmpty()) return null;
 
-            for (String kw : indoorKw) { if (loc.contains(kw)) isIndoor = true; }
-            for (String kw : outdoorKw) { if (loc.contains(kw)) isOutdoor = true; }
+        String loc = event.location().toLowerCase();
 
-            // Si busco Indoor, devuelvo el primero que coincida con interior y NO sea exterior
-            if (wantIndoor && isIndoor && !isOutdoor) return e;
-            // Si busco Outdoor, devuelvo el primero que coincida
-            if (!wantIndoor && isOutdoor) return e;
+        // 1. Buscamos coincidencia exacta de municipio
+        for (String city : islandWeather.keySet()) {
+            if (loc.contains(city.replace(",es", "").trim())) {
+                return islandWeather.get(city);
+            }
         }
-        return null; // Si no encuentra ninguno de ese tipo exacto
+
+        // 2. Zona por defecto: Las Palmas de Gran Canaria
+        for (String city : islandWeather.keySet()) {
+            if (city.contains("las palmas")) {
+                return islandWeather.get(city);
+            }
+        }
+
+        // 3. Fallback: Primer clima disponible
+        return islandWeather.values().iterator().next();
+    }
+
+    private boolean isIndoor(String location) {
+        String[] indoorKw = {"teatro", "auditorio", "centro", "sala", "museo", "pabellón", "espacio", "casa", "biblioteca", "edificio", "recinto"};
+        String loc = location.toLowerCase();
+        for (String kw : indoorKw) {
+            if (loc.contains(kw)) return true;
+        }
+        return false;
+    }
+
+    private boolean isOutdoor(String location) {
+        String[] outdoorKw = {"plaza", "parque", "playa", "calle", "avenida", "estadio", "anfiteatro", "muelle", "mirador", "casco"};
+        String loc = location.toLowerCase();
+        for (String kw : outdoorKw) {
+            if (loc.contains(kw)) return true;
+        }
+        return false;
     }
 }

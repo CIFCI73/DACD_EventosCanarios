@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class InMemoryDatamart implements DatamartUpdater {
-    private final Map<String, Weather> weatherByDate = new HashMap<>();
+    private final Map<String, Map<String, Weather>> weatherByDateAndCity = new HashMap<>();
     private final Map<String, List<Event>> eventsByDate = new HashMap<>();
     private final Gson gson = new Gson();
 
@@ -24,7 +24,14 @@ public class InMemoryDatamart implements DatamartUpdater {
             if (topic.equals("Weather")) {
                 Weather w = gson.fromJson(jsonEvent, Weather.class);
                 String dateKey = w.ts().substring(0, 10);
-                weatherByDate.put(dateKey, w);
+
+                // Normalizamos el nombre de la ciudad (todo a minúsculas para facilitar búsquedas)
+                String cityKey = w.location().toLowerCase();
+
+                // Buscamos el mapa de ese día (si no existe, lo creamos) y guardamos el clima de la ciudad
+                weatherByDateAndCity
+                        .computeIfAbsent(dateKey, k -> new HashMap<>())
+                        .put(cityKey, w);
 
             } else if (topic.equals("Events")) {
                 Event e = gson.fromJson(jsonEvent, Event.class);
@@ -88,8 +95,9 @@ public class InMemoryDatamart implements DatamartUpdater {
     }
 
     // Métodos para la View
-    public Weather getWeatherFor(String date) {
-        return weatherByDate.get(date);
+    // Devuelve un mapa con todos los climas de la isla para ese día
+    public Map<String, Weather> getAllWeatherFor(String date) {
+        return weatherByDateAndCity.getOrDefault(date, new HashMap<>());
     }
 
     public List<Event> getEventsFor(String date) {
