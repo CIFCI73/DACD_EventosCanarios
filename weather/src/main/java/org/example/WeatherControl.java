@@ -22,7 +22,7 @@ public class WeatherControl {
         // 1. Definimos las zonas climáticas clave de la isla
         List<String> municipalities = Arrays.asList(
                 "Las Palmas de Gran Canaria", // Norte/Capital
-                "Maspalomas",                 // Sur
+                "San Bartolomé de Tirajana",  // Sur
                 "Telde",                      // Este
                 "Agaete",                     // Noroeste
                 "Tejeda"                      // Cumbre/Centro
