@@ -12,7 +12,7 @@ import java.util.List;
 
 public class AgendaScraperFeeder implements EventFeeder {
 
-    private final String url = "https://www.icdcultural.org/agenda-cultural/eventos?isla=Gran+Canaria";
+    private final String url = "https://www.grancanaria.com/turismo/es/agenda/agenda/";
 
     @Override
     public List<Event> getEvents() {
@@ -25,20 +25,19 @@ public class AgendaScraperFeeder implements EventFeeder {
                     .timeout(10000)
                     .get();
 
-            Elements eventosHtml = doc.select("div.descripcion-div");
+            Elements eventosHtml = doc.select("div.information");
 
             for (Element el : eventosHtml) {
-                // LOS DATOS INTERNOS
-                String title = el.select("h3.titulo-espectaculo").text();
-                String date = el.select("div.text-block-107").text();
-                String location = el.select("div.text-block-42").text();
+                String title = el.select("h3.title").text();
+                String date = el.select("p.date").text();
 
-                // Nuevos campos obligatorios para el Sprint 2:
-                String ts = Instant.now().toString(); // ts: timestamp (reemplaza a capturedAt)
-                String ss = "news-feeder";            // ss: source system
+                // Para la ubicación, puedes coger solo 'location' o concatenarla con 'address'
+                String location = el.select("p.location").text() + " - " + el.select("p.address").text();
+
+                String ts = Instant.now().toString();
+                String ss = "news-feeder";
 
                 if (!title.isEmpty()) {
-                    // ¡Atención al nuevo orden! (ts, ss, title, date, location)
                     eventList.add(new Event(ts, ss, title, date, location));
                 }
             }
