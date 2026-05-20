@@ -92,26 +92,35 @@ Abre una terminal en la carpeta raíz del proyecto (donde está el archivo `pom.
 2. **Iniciar el Historial (EventStore):** En tu IDE, ejecuta el archivo `Main.java` del módulo `eventstore-builder`. Es importante iniciarlo primero para que empiece a escuchar y no se pierda ningún dato histórico.
 3. **Iniciar los Recolectores (Feeders):** Ejecuta los archivos `Main.java` de los módulos `weather` y `news`. En sus consolas verás cómo descargan la información de internet y la publican en ActiveMQ.
 4. **Iniciar la Interfaz (Business Unit):** Por último, ejecuta el `Main.java` del módulo `business-unit`. Este módulo leerá el historial, se conectará en tiempo real al broker y abrirá el menú interactivo para el usuario.
-## 💻 Ejemplo de Uso
+### 💻 Ejemplo de Uso (Interfaz CLI)
 
-Una vez iniciada la `business-unit`, el programa te pedirá que introduzcas una fecha. Aquí tienes un ejemplo de lo que ocurre cuando el usuario interactúa con el sistema:
+Al ejecutar el módulo `business-unit`, el sistema te presentará una interfaz interactiva en la consola. Solo tienes que introducir una fecha para recibir la agenda cruzada con los datos meteorológicos locales y un consejo inteligente:
 
 ```text
 =========================================================
- 🌴 BIENVENIDO AL RECOMENDADOR DE PLANES DE CANARIAS 🌴 
+ 🌴 BIENVENIDO AL RECOMENDADOR INTELIGENTE DE CANARIAS 🌴 
 =========================================================
 
 👉 Escribe una fecha (formato YYYY-MM-DD) o 'salir' para terminar:
-2026-05-20
+2026-05-22
 
---- 📅 Resultados para el 2026-05-20 ---
-🌤️ Clima: 21.5°C, Humedad: 60%, Prob. Lluvia: 0.0%
-💡 RECOMENDACIÓN: Condiciones meteorológicas excelentes. ¡Día ideal para disfrutar de la oferta cultural! ☀️
+--- 📅 Resultados para el 2026-05-22 ---
 
-🎭 Eventos culturales en Gran Canaria:
-  1. Concierto Sinfónico de Primavera (Lugar: Auditorio Alfredo Kraus - Las Palmas)
-  2. Exposición de Arte Moderno (Lugar: CAAM - Las Palmas)
-----------------------------------------
+🎭 AGENDA CULTURAL Y CONDICIONES LOCALES:
+  1. Festival de Música de Verano (Estadio de Maspalomas)
+     🌤️ Clima en la zona: 26.5°C | Humedad: 55% | Prob. Lluvia: 0.0%
+  2. Exposición de Arte Contemporáneo (Museo Elder, Las Palmas)
+     🌤️ Clima en la zona: 21.0°C | Humedad: 75% | Prob. Lluvia: 60.0%
+  3. Mercado Agrícola Tradicional (Plaza de Teror)
+     🌤️ Clima en la zona: 16.5°C | Humedad: 85% | Prob. Lluvia: 40.0%
+
+💡 RECOMENDACIÓN DEL SISTEMA PARA TI:
+   ⭐ EVENTO: Exposición de Arte Contemporáneo
+   📍 LUGAR: Museo Elder, Las Palmas
+   🗣️ POR QUÉ: Hay probabilidad de lluvia (60.0%) por esta zona ☔. Te aconsejamos este evento a cubierto para no mojarte.
+---------------------------------------------------------
+
+👉 Escribe una fecha (formato YYYY-MM-DD) o 'salir' para terminar:
 ```
 
 ### 💾 Muestra de Datos del Event Store (Formato JSON Lines)
