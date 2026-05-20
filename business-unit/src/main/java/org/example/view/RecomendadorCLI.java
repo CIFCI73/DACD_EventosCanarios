@@ -128,27 +128,51 @@ public class RecomendadorCLI {
 
     // --- ALGORITMOS DE EMPAREJAMIENTO Y CLASIFICACIÓN ---
 
+    // --- ALGORITMOS DE EMPAREJAMIENTO Y CLASIFICACIÓN ---
+
     private Weather getWeatherForEvent(Event event, Map<String, Weather> islandWeather) {
         if (islandWeather == null || islandWeather.isEmpty()) return null;
 
-        String loc = event.location().toLowerCase();
+        // 1. Preguntamos a nuestro "GPS interno" qué estación meteorológica le corresponde a este evento
+        String referenceCity = getReferenceCityFor(event.location());
 
-        // 1. Buscamos coincidencia exacta de municipio
-        for (String city : islandWeather.keySet()) {
-            if (loc.contains(city.replace(",es", "").trim())) {
-                return islandWeather.get(city);
+        // 2. Buscamos esa ciudad de referencia exacta en los climas que hemos descargado
+        for (String cityKey : islandWeather.keySet()) {
+            if (cityKey.contains(referenceCity)) {
+                return islandWeather.get(cityKey);
             }
         }
 
-        // 2. Zona por defecto: Las Palmas de Gran Canaria
-        for (String city : islandWeather.keySet()) {
-            if (city.contains("las palmas")) {
-                return islandWeather.get(city);
-            }
-        }
-
-        // 3. Fallback: Primer clima disponible
+        // 3. Fallback de seguridad extremo
         return islandWeather.values().iterator().next();
+    }
+
+    // EL NUEVO "GPS INTERNO" DE ZONAS CLIMÁTICAS
+    private String getReferenceCityFor(String location) {
+        String loc = location.toLowerCase();
+
+        // Zona Cumbre / Medianías (Frío, más lluvia) -> Vinculado a TEJEDA
+        String[] cumbre = {"tejeda", "valleseco", "san mateo", "artenara", "teror"};
+        for (String town : cumbre) { if (loc.contains(town)) return "tejeda"; }
+
+        // Zona Sur / Suroeste (Calor, sol) -> Vinculado a MASPALOMAS
+        String[] sur = {"maspalomas", "mogán", "mogan", "san bartolomé", "san bartolome", "santa lucía", "santa lucia", "arguineguín", "playa del inglés"};
+        for (String town : sur) { if (loc.contains(town)) return "maspalomas"; }
+
+        // Zona Norte / Noroeste -> Vinculado a AGAETE
+        String[] norte = {"agaete", "gáldar", "galdar", "guía", "guia", "moya", "firgas", "aldea"};
+        for (String town : norte) { if (loc.contains(town)) return "agaete"; }
+
+        // Zona Este / Sureste (Viento) -> Vinculado a TELDE
+        String[] este = {"telde", "ingenio", "agüimes", "aguimes", "valsequillo", "vecindario"};
+        for (String town : este) { if (loc.contains(town)) return "telde"; }
+
+        // Zona Capital y aledaños -> Vinculado a LAS PALMAS
+        String[] capital = {"las palmas", "arucas", "santa brígida", "santa brigida"};
+        for (String town : capital) { if (loc.contains(town)) return "las palmas"; }
+
+        // Si no menciona un municipio (ej: "Gran Canaria Arena"), asumimos la capital por defecto
+        return "las palmas";
     }
 
     private boolean isIndoor(String location) {
