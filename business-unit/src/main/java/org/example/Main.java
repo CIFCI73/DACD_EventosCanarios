@@ -20,7 +20,7 @@ public class Main {
         ActiveMQListener listener = new ActiveMQListener(datamart);
         listener.start();
 
-        // 4. Arrancamos tu interfaz de usuario
+        // Arrancamos tu interfaz de usuario
         RecomendadorCLI gui = new RecomendadorCLI(datamart);
         gui.start();
     }

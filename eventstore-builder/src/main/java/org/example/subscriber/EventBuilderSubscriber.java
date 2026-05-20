@@ -10,10 +10,10 @@ public class EventBuilderSubscriber {
     // ID único para que ActiveMQ nos reconozca y la suscripción sea duradera
     private final String clientId = "event-store-builder";
 
-    // Aquí guardamos la clase "Archivista"
+    // aquí guardamos la clase "Archivista"
     private final EventStore store;
 
-    // Cuando creamos el Subscriber, le pasamos el Archivista
+    // cuando creamos el Subscriber, le pasamos el Archivista
     public EventBuilderSubscriber(EventStore store) {
         this.store = store;
     }
@@ -53,7 +53,7 @@ public class EventBuilderSubscriber {
                 String jsonEvent = textMessage.getText();
                 System.out.println("🎧 Nuevo mensaje recibido en '" + topicName + "'");
 
-                // Le pasamos el topic y el JSON al método save() de FileEventStore
+                // pasamos el topic y el JSON
                 store.save(topicName, jsonEvent);
             }
         } catch (JMSException e) {

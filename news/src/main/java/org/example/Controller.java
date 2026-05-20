@@ -12,7 +12,7 @@ public class Controller {
     private final EventFeeder feeder;
     private final EventStore store;
 
-    // El constructor recibe las interfaces, ¡no las clases concretas! (Principio SOLID)
+    // El constructor recibe las interfaces (Principio SOLID)
     public Controller(EventFeeder feeder, EventStore store) {
         this.feeder = feeder;
         this.store = store;
@@ -26,10 +26,10 @@ public class Controller {
             @Override
             public void run() {
                 System.out.println("Iniciando captura de eventos...");
-                // 1. Extraer datos de la web
+                // Extraer datos de la web
                 List<Event> events = feeder.getEvents();
 
-                // 2. Guardarlos en SQLite
+                // guardarlos en SQLite
                 if (!events.isEmpty()) {
                     store.store(events);
                 } else {

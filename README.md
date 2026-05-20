@@ -27,9 +27,13 @@ En lugar de conectar los módulos directamente, hemos usado un patrón **Publish
 Nuestros módulos recolectores (*Weather Feeder* y *News Feeder*) actúan como productores. Cuando descargan información, la empaquetan en archivos JSON y la publican en canales específicos (`Topics`) de nuestro broker local de **Apache ActiveMQ**.
 
 *(Diagrama de la Arquitectura del Sistema)*
+
+
 ![Arquitectura del Sistema](arquitectura_sistema.png)
 
 *(Diagrama de la Arquitectura de la Aplicación)*
+
+
 ![Diagrama de Clases (Aplicación)](arquitectura_aplicacion.png)
 ### 3. El EventStore (Almacenamiento Histórico)
 Para no perder ningún dato, hemos creado el módulo `eventstore-builder`. Este módulo es un "Suscriptor Duradero" (Durable Subscriber). Se conecta a ActiveMQ y guarda automáticamente cada mensaje que circula por la red en archivos `.events` dentro del disco duro. Esto nos crea un historial (Data Lake) que podemos consultar en el futuro.
@@ -37,13 +41,16 @@ Para no perder ningún dato, hemos creado el módulo `eventstore-builder`. Este 
 ### 4. La Business Unit y el Datamart (Arquitectura Lambda)
 El núcleo de nuestro recomendador es el módulo `business-unit`. Para procesar la información, hemos implementado una solución inspirada en la **Arquitectura Lambda**, trabajando a dos velocidades:
 * **Procesamiento Batch:** Al iniciar, el programa lee los archivos históricos del disco duro para tener el contexto de los días anteriores.
-* **Procesamiento en Streaming (Real-Time):** Al mismo tiempo, se suscribe a ActiveMQ para recibir las últimas actualizaciones de clima y eventos en directo.
+* **Procesamiento en Streaming (Real-Time):** Al mismo tiempo, se suscribe a ActiveMQ para recibir las últimas actualizaciones en directo. Los datos del clima se actualizan de forma automática cada **1 minuto**, mientras que la agenda cultural busca nuevos eventos cada **1 hora**.
 
-**El Datamart en Memoria:**
-Toda esta información converge en nuestra clase `InMemoryDatamart`. El valor técnico de este componente es vital, ya que realiza dos tareas de limpieza críticas:
-1. **Normalización de Fechas:** La API del clima y la web de eventos nos dan las fechas en formatos completamente distintos. El Datamart procesa ambas y las estandariza al formato `YYYY-MM-DD` para poder cruzarlas.
-2. **Control de Duplicados:** Al recibir datos constantemente en tiempo real, es normal recibir el mismo evento varias veces. El Datamart filtra y elimina los duplicados antes de mostrarlos al usuario.
+**Estructura y Funcionamiento del Datamart:**
+Toda esta información converge en nuestra clase `InMemoryDatamart`. Para cumplir con los requisitos de optimización, los datos no se guardan de forma caótica, sino organizados internamente mediante dos mapas Java (`HashMap`):
+1. `Map<String, Weather>`: Guarda un único objeto de clima por cada día, usando la fecha como clave.
+2. `Map<String, List<Event>>`: Guarda una lista de eventos culturales programados para cada día, usando también la fecha como clave.
 
+El valor técnico de este componente es vital, ya que realiza dos tareas de limpieza críticas antes de guardar los elementos en los mapas:
+* **Normalización de Fechas:** La API del clima y la web de eventos nos dan las fechas en formatos completamente distintos. El Datamart procesa ambas y las estandariza al formato `YYYY-MM-DD` para que las claves de los mapas coincidan perfectamente.
+* **Control de Duplicados:** Al recibir datos constantemente en tiempo real, el Datamart filtra los mensajes utilizando el título del espectáculo, asegurando que no se añadan eventos repetidos en la lista del mapa.
 
 ## 📐 Principios de Diseño y Patrones Aplicados
 
@@ -58,6 +65,14 @@ Nuestros controladores no dependen de clases concretas, sino de **Interfaces** (
 **Patrón Publisher / Subscriber**
 Es el corazón de nuestra comunicación. En lugar de que los módulos estén conectados entre sí de forma rígida, están totalmente desacoplados. Los recolectores de datos (Publishers) simplemente "publican" sus mensajes en ActiveMQ sin saber quién los va a leer. Por otro lado, la unidad de negocio y el almacenamiento histórico (Subscribers) "escuchan" esos canales y reaccionan de forma automática e independiente.
 
+## 📁 Estructura del Proyecto
+
+El repositorio está organizado en cuatro módulos principales independientes, estructurados con Maven según los diferentes objetivos del proyecto:
+
+* `weather/`: Módulo encargado de conectar con OpenWeatherMap, empaquetar los datos meteorológicos en JSON y publicarlos en ActiveMQ.
+* `news/`: Módulo que realiza el *web scraping* sobre la agenda cultural de Gran Canaria y publica los eventos encontrados en el broker.
+* `eventstore-builder/`: Módulo suscriptor que escucha los canales de ActiveMQ y archiva los mensajes de forma persistente en el disco duro.
+* `business-unit/`: El módulo central del recomendador. Contiene el Datamart en memoria, lee el historial, escucha los datos en tiempo real y ofrece la interfaz CLI al usuario.
 
 ## 🚀 Instrucciones de Ejecución y Configuración
 
@@ -97,4 +112,20 @@ Una vez iniciada la `business-unit`, el programa te pedirá que introduzcas una 
   1. Concierto Sinfónico de Primavera (Lugar: Auditorio Alfredo Kraus - Las Palmas)
   2. Exposición de Arte Moderno (Lugar: CAAM - Las Palmas)
 ----------------------------------------
+```
+
+### 💾 Muestra de Datos del Event Store (Formato JSON Lines)
+
+Para cumplir con la entrega, los datos crudos se almacenan en el disco duro de forma incremental dentro de la carpeta `eventstore/` utilizando el formato JSON Lines (un JSON independiente por cada línea). Aquí se muestra un ejemplo real de cómo el `eventstore-builder` archiva los datos:
+
+**Muestra de Weather (`weather-feeder`):**
+```json
+{"ts":"2026-05-20T12:00:00Z","ss":"weather-feeder","location":"Las Palmas de Gran Canaria","temp":22.75,"humidity":64,"rainProb":0.0}
+```
+
+**Muestra de Events (`news-feeder`):**
+```json
+{"ts":"2026-05-20T12:05:00Z","ss":"news-feeder","title":"Gáldar en Flor","date":"20/5/2026 10:00","location":"Gáldar - Calles del Casco Histórico"}
+```
+
 

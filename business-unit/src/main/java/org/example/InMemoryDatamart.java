@@ -25,7 +25,7 @@ public class InMemoryDatamart implements DatamartUpdater {
                 Weather w = gson.fromJson(jsonEvent, Weather.class);
                 String dateKey = w.ts().substring(0, 10);
 
-                // Normalizamos el nombre de la ciudad todo a minúsculas para facilitar búsquedas
+                // el nombre de la ciudad todo a minúsculas
                 String cityKey = w.location().toLowerCase();
 
                 // Buscamos el mapa de ese día (si no existe, lo creamos) y guardamos el clima de la ciudad
