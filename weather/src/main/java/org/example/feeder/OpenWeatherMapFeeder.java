@@ -4,40 +4,57 @@ import org.example.model.Weather;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import java.time.Instant;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class OpenWeatherMapFeeder implements WeatherFeeder {
-    private final String apiKey = "cbe75b0dbf0b1672f5717afb30edd422"; // clave de OpenWeatherMap
+    private final String apiKey = "cbe75b0dbf0b1672f5717afb30edd422"; // Tu clave
     private final OkHttpClient client = new OkHttpClient();
 
     @Override
-    public Weather getWeather(String location) {
-        // Construir la URL de la API
-        String url = "https://api.openweathermap.org/data/2.5/weather?q=" + location + "&appid=" + apiKey + "&units=metric";
+    public List<Weather> getWeather(String location) {
+        List<Weather> forecastList = new ArrayList<>();
+        // ¡CAMBIO CLAVE! Usamos /forecast en lugar de /weather
+        String url = "https://api.openweathermap.org/data/2.5/forecast?q=" + location + "&appid=" + apiKey + "&units=metric";
 
-        //petición HTTP usando OkHttp
         Request request = new Request.Builder().url(url).build();
 
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful() && response.body() != null) {
-                //Convertir el texto a un Objeto JSON con Gson
                 String responseBody = response.body().string();
                 JsonObject jsonObject = JsonParser.parseString(responseBody).getAsJsonObject();
 
-                //Extraer los datos que nos interesan
-                JsonObject main = jsonObject.getAsJsonObject("main");
-                double temp = main.get("temp").getAsDouble();
-                int humidity =  main.get("humidity").getAsInt();
-                String ts = Instant.now().toString(); //Formato ISO-8601
-                String ss = "weather-feeder"; // Identificador de la fuente
+                // La API de pronóstico devuelve una lista llamada "list"
+                JsonArray list = jsonObject.getAsJsonArray("list");
 
-                return new Weather(ts, ss, location, temp, humidity, 0.0);
+                for (int i = 0; i < list.size(); i++) {
+                    JsonObject item = list.get(i).getAsJsonObject();
+                    String dtTxt = item.get("dt_txt").getAsString(); // Ej: "2026-05-20 12:00:00"
+
+                    // Filtramos para coger solo la previsión del mediodía de cada día
+                    if (dtTxt.contains("12:00:00")) {
+                        JsonObject main = item.getAsJsonObject("main");
+                        double temp = main.get("temp").getAsDouble();
+                        int humidity = main.get("humidity").getAsInt();
+
+                        // En la API /forecast, la probabilidad de lluvia viene en 'pop' (de 0 a 1)
+                        double rainProb = item.has("pop") ? item.get("pop").getAsDouble() : 0.0;
+
+                        // Formateamos la fecha para que el Datamart la entienda perfectamente
+                        String ts = dtTxt.replace(" ", "T") + "Z";
+                        String ss = "weather-feeder";
+
+                        forecastList.add(new Weather(ts, ss, location, temp, humidity, rainProb));
+                    }
+                }
             }
         } catch (Exception e) {
             System.err.println("Error al conectar con OpenWeatherMap: " + e.getMessage());
         }
-        return null;
+        return forecastList;
     }
 }

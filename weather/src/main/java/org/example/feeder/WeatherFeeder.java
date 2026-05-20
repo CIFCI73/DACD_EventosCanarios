@@ -1,8 +1,9 @@
 package org.example.feeder;
 
 import org.example.model.Weather;
+import java.util.List;
 
 public interface WeatherFeeder {
-    // Recibe el nombre de la ciudad y devuelve el objeto Weather con la previsión
-    Weather getWeather(String location);
+    // DEVUELVE UNA LISTA DE PREDICCIONES
+    List<Weather> getWeather(String location);
 }

@@ -15,7 +15,7 @@ public class AgendaScraperFeeder implements EventFeeder {
 
     // 1. Ahora usamos una LISTA de URLs (Puedes añadir todas las páginas que quieras aquí)
     private final List<String> urls = Arrays.asList(
-            "https://www.grancanaria.com/turismo/es/agenda/agenda/", // Seguramente la página 1
+            "https://www.grancanaria.com/turismo/es/agenda/agenda/",
             "https://www.grancanaria.com/turismo/es/agenda/agenda/?r=event%2Findex&L=0&id=4066&page=2",
             "https://www.grancanaria.com/turismo/es/agenda/agenda/?r=event%2Findex&L=0&id=4066&page=3&cHash=d5e9f5c51da796bf84d2552b0d2a7a36"
     );
