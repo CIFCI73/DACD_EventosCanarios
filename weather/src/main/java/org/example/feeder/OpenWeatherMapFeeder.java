@@ -18,7 +18,6 @@ public class OpenWeatherMapFeeder implements WeatherFeeder {
     @Override
     public List<Weather> getWeather(String location) {
         List<Weather> forecastList = new ArrayList<>();
-        // ¡CAMBIO CLAVE! Usamos /forecast en lugar de /weather
         String url = "https://api.openweathermap.org/data/2.5/forecast?q=" + location + "&appid=" + apiKey + "&units=metric";
 
         Request request = new Request.Builder().url(url).build();
@@ -35,16 +34,16 @@ public class OpenWeatherMapFeeder implements WeatherFeeder {
                     JsonObject item = list.get(i).getAsJsonObject();
                     String dtTxt = item.get("dt_txt").getAsString(); // Ej: "2026-05-20 12:00:00"
 
-                    // Filtramos para coger solo la previsión del mediodía de cada día
+                    // filtramos para coger solo la previsión del mediodía de cada día
                     if (dtTxt.contains("12:00:00")) {
                         JsonObject main = item.getAsJsonObject("main");
                         double temp = main.get("temp").getAsDouble();
                         int humidity = main.get("humidity").getAsInt();
 
-                        // En la API /forecast, la probabilidad de lluvia viene en 'pop' (de 0 a 1)
+                        // la probabilidad de lluvia viene de 0 a 1
                         double rainProb = item.has("pop") ? item.get("pop").getAsDouble() : 0.0;
 
-                        // Formateamos la fecha para que el Datamart la entienda perfectamente
+                        // Formateamos la fecha para que el Datamart la entienda
                         String ts = dtTxt.replace(" ", "T") + "Z";
                         String ss = "weather-feeder";
 

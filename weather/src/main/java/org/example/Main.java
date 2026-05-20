@@ -8,7 +8,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        // Dónde se va a guardar el archivo, ahora usamos ActiveMQ en lugar de SQLite
+        // ahora usamos ActiveMQ en lugar de SQLite
         // String dbPath = "jdbc:sqlite:weather.db"; (Ya no se usa)
 
         OpenWeatherMapFeeder feeder = new OpenWeatherMapFeeder();

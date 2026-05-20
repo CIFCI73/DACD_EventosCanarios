@@ -19,7 +19,7 @@ public class WeatherControl {
     }
 
     public void execute() {
-        // 1. Definimos las zonas climáticas clave de la isla
+        // definimos las zonas climáticas clave de la isla
         List<String> municipalities = Arrays.asList(
                 "Las Palmas de Gran Canaria", // Norte/Capital
                 "San Bartolomé de Tirajana",  // Sur
@@ -30,7 +30,7 @@ public class WeatherControl {
 
         System.out.println("Iniciando escaneo meteorológico insular...");
 
-        // 2. Pedimos el clima para CADA municipio
+        // pedimos el clima para CADA municipio
         for (String city : municipalities) {
             List<Weather> weatherForecasts = feeder.getWeather(city + ",ES"); // Añadimos ,ES para mayor precisión en la API
 
@@ -52,7 +52,7 @@ public class WeatherControl {
             public void run() { execute(); }
         };
 
-        timer.schedule(task, 0, 3600000); // Se ejecuta cada hora
+        timer.schedule(task, 0, 3600000); // se ejecuta cada hora
         System.out.println("Temporizador iniciado. Consultando la previsión meteorológica cada hora...");
     }
 }
