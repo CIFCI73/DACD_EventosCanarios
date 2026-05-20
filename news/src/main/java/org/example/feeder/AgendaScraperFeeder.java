@@ -13,7 +13,7 @@ import java.util.List;
 
 public class AgendaScraperFeeder implements EventFeeder {
 
-    // 1. Ahora usamos una LISTA de URLs (Puedes añadir todas las páginas que quieras aquí)
+    // LISTA de URLs
     private final List<String> urls = Arrays.asList(
             "https://www.grancanaria.com/turismo/es/agenda/agenda/",
             "https://www.grancanaria.com/turismo/es/agenda/agenda/?r=event%2Findex&L=0&id=4066&page=2",
@@ -24,7 +24,7 @@ public class AgendaScraperFeeder implements EventFeeder {
     public List<Event> getEvents() {
         List<Event> eventList = new ArrayList<>();
 
-        // 2. Bucle externo: recorre cada URL de nuestra lista
+        // Bucle externo: recorre cada URL de nuestra lista
         for (String url : urls) {
             try {
                 System.out.println("🌐 Conectando a: " + url);
@@ -33,7 +33,7 @@ public class AgendaScraperFeeder implements EventFeeder {
                         .timeout(10000)
                         .get();
 
-                // Usamos los selectores HTML que descubrimos antes
+                // Usamos los selectores HTML
                 Elements eventosHtml = doc.select("div.information");
 
                 for (Element el : eventosHtml) {

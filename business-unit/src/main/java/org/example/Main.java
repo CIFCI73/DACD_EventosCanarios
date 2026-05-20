@@ -8,19 +8,19 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("🚀 Arrancando Business Unit...");
 
-        // 1. Instanciamos tu Datamart (el corazón del módulo)
+        // Instanciamos el Datamart
         InMemoryDatamart datamart = new InMemoryDatamart();
 
-        // 2. Cargamos los datos HISTÓRICOS (Trabajo de tu compañero)
+        // Cargamos los datos historicos
         // Usamos la ruta donde se guardan los archivos .events del Sprint 2
         EventStoreReader reader = new EventStoreReader(datamart);
         reader.readHistory("eventstore");
 
-        // 3. Encendemos la escucha en TIEMPO REAL (Trabajo de tu compañero)
+        // Encendemos la escucha en tiempo real
         ActiveMQListener listener = new ActiveMQListener(datamart);
         listener.start();
 
-        // 4. Arrancamos tu interfaz de usuario (Tu trabajo)
+        // 4. Arrancamos tu interfaz de usuario
         RecomendadorCLI gui = new RecomendadorCLI(datamart);
         gui.start();
     }

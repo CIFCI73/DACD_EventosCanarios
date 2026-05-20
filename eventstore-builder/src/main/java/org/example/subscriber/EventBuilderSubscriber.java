@@ -10,7 +10,7 @@ public class EventBuilderSubscriber {
     // ID único para que ActiveMQ nos reconozca y la suscripción sea duradera
     private final String clientId = "event-store-builder";
 
-    // Aquí guardamos la clase "Archivista" de tu compañero
+    // Aquí guardamos la clase "Archivista"
     private final EventStore store;
 
     // Cuando creamos el Subscriber, le pasamos el Archivista
@@ -20,7 +20,7 @@ public class EventBuilderSubscriber {
 
     public void start() {
         try {
-            // 1. Conectar al broker
+            // Conectar al broker
             ConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
             Connection connection = factory.createConnection();
             connection.setClientID(clientId); // Obligatorio para suscripciones duraderas
@@ -28,13 +28,13 @@ public class EventBuilderSubscriber {
 
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            // 2. Suscribirnos al canal del tiempo (Tu módulo)
+            // Suscribirnos al canal del tiempo
             Topic weatherTopic = session.createTopic("Weather");
             TopicSubscriber weatherSub = session.createDurableSubscriber(weatherTopic, "weather-sub");
             // Cuando llegue un mensaje, llamamos a procesarMensaje
             weatherSub.setMessageListener(message -> procesarMensaje("Weather", message));
 
-            // 3. Suscribirnos al canal de noticias (El módulo de tu compañero)
+            // Suscribirnos al canal de noticias
             Topic eventsTopic = session.createTopic("Events");
             TopicSubscriber eventsSub = session.createDurableSubscriber(eventsTopic, "events-sub");
             eventsSub.setMessageListener(message -> procesarMensaje("Events", message));
@@ -46,14 +46,14 @@ public class EventBuilderSubscriber {
         }
     }
 
-    // Este método une tu código con el de tu compañero
+    // Union de los modulos
     private void procesarMensaje(String topicName, Message message) {
         try {
             if (message instanceof TextMessage textMessage) {
                 String jsonEvent = textMessage.getText();
                 System.out.println("🎧 Nuevo mensaje recibido en '" + topicName + "'");
 
-                // ¡MAGIA! Le pasamos el topic y el JSON al método save() de FileEventStore
+                // Le pasamos el topic y el JSON al método save() de FileEventStore
                 store.save(topicName, jsonEvent);
             }
         } catch (JMSException e) {

@@ -6,7 +6,7 @@ import javax.jms.*;
 
 public class ActiveMQListener {
     private final String brokerUrl = "tcp://localhost:61616";
-    // IMPORTANTE: Un ID diferente al del EventStore para que ActiveMQ no los confunda
+    // Un ID diferente al del EventStore para que ActiveMQ no los confunda
     private final String clientId = "business-unit-realtime";
     private final DatamartUpdater datamart;
 
@@ -42,7 +42,7 @@ public class ActiveMQListener {
     private void procesar(Message message, String topic) {
         try {
             if (message instanceof TextMessage textMessage) {
-                // Le pasas el JSON directamente al Datamart de tu compañero
+                // Le pasas el JSON directamente al Datamart
                 datamart.processEvent(topic, textMessage.getText());
             }
         } catch (Exception e) {

@@ -4,6 +4,6 @@ import org.example.model.Event;
 import java.util.List;
 
 public interface EventStore {
-    // Recibe la lista de eventos obtenidos por el scraper y los guarda uno a uno en SQLite
+    // Recibe la lista de eventos obtenidos por el scraper y los guarda uno a uno
     void store(List<Event> events);
 }

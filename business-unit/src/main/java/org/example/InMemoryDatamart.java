@@ -25,7 +25,7 @@ public class InMemoryDatamart implements DatamartUpdater {
                 Weather w = gson.fromJson(jsonEvent, Weather.class);
                 String dateKey = w.ts().substring(0, 10);
 
-                // Normalizamos el nombre de la ciudad (todo a minúsculas para facilitar búsquedas)
+                // Normalizamos el nombre de la ciudad todo a minúsculas para facilitar búsquedas
                 String cityKey = w.location().toLowerCase();
 
                 // Buscamos el mapa de ese día (si no existe, lo creamos) y guardamos el clima de la ciudad
@@ -38,7 +38,7 @@ public class InMemoryDatamart implements DatamartUpdater {
                 String rawDate = e.date();
 
                 try {
-                    // "Pescamos" todas las fechas que haya dentro del texto
+                    // Pescamos todas las fechas que haya dentro del texto
                     Matcher matcher = datePattern.matcher(rawDate);
                     List<String> extractedDates = new ArrayList<>();
 
@@ -47,7 +47,7 @@ public class InMemoryDatamart implements DatamartUpdater {
                     }
 
                     if (extractedDates.size() == 2) {
-                        // 1. ES UN RANGO DE FECHAS (Encontró dos fechas separadas)
+                        // ES UN RANGO DE FECHAS
                         LocalDate startDate = parseToLocalDate(extractedDates.get(0));
                         LocalDate endDate = parseToLocalDate(extractedDates.get(1));
 
@@ -55,11 +55,11 @@ public class InMemoryDatamart implements DatamartUpdater {
                             addEventToMap(date.toString(), e);
                         }
                     } else if (extractedDates.size() == 1) {
-                        // 2. ES UNA FECHA ÚNICA (Ignora las horas y los paréntesis automáticamente)
+                        // ES UNA FECHA ÚNICA (Ignora las horas y los paréntesis automáticamente)
                         LocalDate date = parseToLocalDate(extractedDates.get(0));
                         addEventToMap(date.toString(), e);
                     } else {
-                        // 3. NO ENCONTRÓ FECHAS VÁLIDAS
+                        // NO ENCONTRÓ FECHAS VÁLIDAS
                         throw new Exception("No se encontraron fechas en el formato DD/MM/YYYY");
                     }
                 } catch (Exception ex) {
@@ -73,7 +73,7 @@ public class InMemoryDatamart implements DatamartUpdater {
         }
     }
 
-    // --- MÉTODOS AUXILIARES ---
+    // MÉTODOS AUXILIARES
 
     private LocalDate parseToLocalDate(String dateStr) {
         String[] parts = dateStr.split("/");

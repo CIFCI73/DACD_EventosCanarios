@@ -8,13 +8,13 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Iniciando el módulo Event Store Builder...");
 
-        // Instanciamos el "Archivista" (el código de tu compañero)
+        // Instanciamos el "Archivista"
         EventStore fileStore = new FileEventStore();
 
-        // Instanciamos el "Escuchador" (tu código) y le pasamos el Archivista
+        // Instanciamos el "Escuchador" y le pasamos el Archivista
         EventBuilderSubscriber subscriber = new EventBuilderSubscriber(fileStore);
 
-        // ¡Encendemos la radio!
+        // Encendemos
         subscriber.start();
     }
 }

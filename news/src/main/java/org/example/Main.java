@@ -9,7 +9,7 @@ public class Main {
     public static void main(String[] args) {
         EventFeeder scraper = new AgendaScraperFeeder();
 
-        // ¡CAMBIO CLAVE! Ahora usamos ActiveMQ en lugar de SQLite
+        // Ahora usamos ActiveMQ en lugar de SQLite
         EventStore publisher = new ActiveMQEventStore();
 
         Controller controller = new Controller(scraper, publisher);

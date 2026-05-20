@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class RecomendadorCLI {
     private final InMemoryDatamart datamart;
 
-    // Cuando creamos la interfaz, le damos acceso al "almacén" de datos (el Datamart)
+    // Cuando creamos la interfaz, le damos acceso al Datamart
     public RecomendadorCLI(InMemoryDatamart datamart) {
         this.datamart = datamart;
     }
@@ -55,7 +55,7 @@ public class RecomendadorCLI {
         } else {
             for (int i = 0; i < events.size(); i++) {
                 Event e = events.get(i);
-                // Buscamos el clima específico para la zona de ESTE evento
+                // Buscamos el clima específico para la zona de este evento
                 Weather localWeather = getWeatherForEvent(e, islandWeather);
 
                 System.out.println("  " + (i + 1) + ". " + e.title() + " (" + e.location() + ")");
@@ -79,7 +79,7 @@ public class RecomendadorCLI {
         Event bestEvent = null;
         String reason = "";
 
-        // 1. Intentar buscar un plan de exterior si hace buen tiempo en su zona
+        // Intentar buscar un plan de exterior si hace buen tiempo en su zona
         for (Event e : events) {
             Weather localW = getWeatherForEvent(e, islandWeather);
             if (localW != null && isOutdoor(e.location())) {
@@ -91,7 +91,7 @@ public class RecomendadorCLI {
             }
         }
 
-        // 2. Si no hay buen tiempo exterior, buscar refugio interior donde el clima sea adverso
+        // Si no hay buen tiempo exterior, buscar refugio interior donde el clima sea adverso
         if (bestEvent == null) {
             for (Event e : events) {
                 Weather localW = getWeatherForEvent(e, islandWeather);
@@ -113,7 +113,7 @@ public class RecomendadorCLI {
             }
         }
 
-        // 3. Fallback: cualquier evento si el clima es neutro y no salta ninguna alerta
+        // Fallback: cualquier evento si el clima es neutro y no salta ninguna alerta
         if (bestEvent == null && !events.isEmpty()) {
             bestEvent = events.get(0);
             reason = "Las condiciones son muy estables en toda la isla hoy. Cualquier plan es bueno, pero nosotros destacamos este para ti:";
@@ -126,36 +126,34 @@ public class RecomendadorCLI {
         }
     }
 
-    // --- ALGORITMOS DE EMPAREJAMIENTO Y CLASIFICACIÓN ---
-
-    // --- ALGORITMOS DE EMPAREJAMIENTO Y CLASIFICACIÓN ---
+    // ALGORITMOS DE EMPAREJAMIENTO Y CLASIFICACIÓN:
 
     private Weather getWeatherForEvent(Event event, Map<String, Weather> islandWeather) {
         if (islandWeather == null || islandWeather.isEmpty()) return null;
 
-        // 1. Preguntamos a nuestro "GPS interno" qué estación meteorológica le corresponde a este evento
+        // Preguntamos a nuestro "GPS interno" qué estación meteorológica le corresponde a este evento
         String referenceCity = getReferenceCityFor(event.location());
 
-        // 2. Buscamos esa ciudad de referencia exacta en los climas que hemos descargado
+        // Buscamos esa ciudad de referencia exacta en los climas que hemos descargado
         for (String cityKey : islandWeather.keySet()) {
             if (cityKey.contains(referenceCity)) {
                 return islandWeather.get(cityKey);
             }
         }
 
-        // 3. Fallback de seguridad extremo
+        // Fallback de seguridad extremo
         return islandWeather.values().iterator().next();
     }
 
-    // EL NUEVO "GPS INTERNO" DE ZONAS CLIMÁTICAS
+    // EL "GPS INTERNO" DE ZONAS CLIMÁTICAS
     private String getReferenceCityFor(String location) {
         String loc = location.toLowerCase();
 
-        // Zona Cumbre / Medianías (Frío, más lluvia) -> Vinculado a TEJEDA
+        // Zona Cumbre / Medianías -> Vinculado a TEJEDA
         String[] cumbre = {"tejeda", "valleseco", "san mateo", "artenara", "teror"};
         for (String town : cumbre) { if (loc.contains(town)) return "tejeda"; }
 
-        // Zona Sur / Suroeste (Calor, sol) -> Vinculado a MASPALOMAS
+        // Zona Sur / Suroeste -> Vinculado a San Bartolomé de Tirajana
         String[] sur = {"maspalomas", "mogán", "mogan", "san bartolomé", "san bartolome", "santa lucía", "santa lucia", "arguineguín", "playa del inglés"};
         for (String town : sur) { if (loc.contains(town)) return "maspalomas"; }
 
@@ -163,7 +161,7 @@ public class RecomendadorCLI {
         String[] norte = {"agaete", "gáldar", "galdar", "guía", "guia", "moya", "firgas", "aldea"};
         for (String town : norte) { if (loc.contains(town)) return "agaete"; }
 
-        // Zona Este / Sureste (Viento) -> Vinculado a TELDE
+        // Zona Este / Sureste -> Vinculado a TELDE
         String[] este = {"telde", "ingenio", "agüimes", "aguimes", "valsequillo", "vecindario"};
         for (String town : este) { if (loc.contains(town)) return "telde"; }
 
